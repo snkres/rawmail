@@ -1,0 +1,34 @@
+{
+  "name": "@rawmail/api",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fastify/swagger": "^9.5.2",
+    "@fastify/swagger-ui": "^5.2.3",
+    "@rawmail/auth": "workspace:*",
+    "@rawmail/db": "workspace:*",
+    "@rawmail/shared": "workspace:*",
+    "@fastify/rate-limit": "^9.0.0",
+    "fastify-raw-body": "^5.0.0",
+    "bcryptjs": "^2.4.3",
+    "drizzle-orm": "^0.30.10",
+    "fastify": "^5.0.0",
+    "fastify-plugin": "^5.0.0",
+    "ioredis": "^5.3.0",
+    "node-cron": "^3.0.0",
+    "stripe": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.0.0",
+    "@types/node-cron": "^3.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.4.0"
+  }
+}

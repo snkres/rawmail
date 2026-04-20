@@ -1,0 +1,17 @@
+{
+  "name": "@rawmail/mail",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "haraka -c .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "haraka": "^0.0.33",
+    "ioredis": "^5.3.0",
+    "mailparser": "^3.6.0",
+    "pg": "^8.11.0"
+  },
+  "devDependencies": {
+    "vitest": "^1.4.0"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@rawmail/auth",
+  "version": "0.0.1",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "better-auth": "^1.3.6",
+    "@rawmail/db": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

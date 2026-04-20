@@ -1,0 +1,11 @@
+me: rawmail.sh
+nodes: 1
+smtp_port: 25
+
+queue: rawmail-queue
+plugins:
+  - rawmail-validate
+  - rawmail-sanitize
+  - rawmail-queue
+
+loglevel: WARN

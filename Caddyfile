@@ -1,0 +1,11 @@
+rawmail.sh {
+  reverse_proxy /v1/* api:3001
+  reverse_proxy web:3000
+}
+
+attachments.rawmail.sh {
+  root * /srv/attachments
+  file_server
+  header Content-Disposition attachment
+  header -Set-Cookie
+}

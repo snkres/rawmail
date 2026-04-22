@@ -57,10 +57,29 @@ export function buildApp(opts: FastifyServerOptions = {}) {
     new DomainService(app.db).startPolling()
   })
 
-  app.all('/v1/auth/*', async (req, reply) => {
+  // Auth route: build a proper Web Request so better-auth gets a full URL with origin
+  app.all('/v1/auth/*', { config: { rawBody: true } }, async (req, reply) => {
     if (!app.auth) return reply.code(503).send({ error: 'Auth unavailable' })
-    const response = await app.auth.handler(req.raw as any)
-    reply.raw.writeHead(response.status, Object.fromEntries(response.headers.entries()))
+
+    const base = process.env.BETTER_AUTH_URL ?? 'http://localhost:3001'
+    const url = new URL(req.url, base)
+
+    const headers = new Headers()
+    for (const [key, val] of Object.entries(req.headers)) {
+      if (val) headers.set(key, Array.isArray(val) ? val[0]! : val)
+    }
+
+    const hasBody = req.method !== 'GET' && req.method !== 'HEAD'
+    const webRequest = new Request(url.toString(), {
+      method: req.method,
+      headers,
+      body: hasBody ? (req as any).rawBody ?? null : null,
+    })
+
+    const response = await app.auth.handler(webRequest)
+    const resHeaders: Record<string, string> = {}
+    response.headers.forEach((val, key) => { resHeaders[key] = val })
+    reply.raw.writeHead(response.status, resHeaders)
     reply.raw.end(await response.text())
   })
 

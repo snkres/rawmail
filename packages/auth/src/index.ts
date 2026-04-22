@@ -4,7 +4,12 @@ import type { Db } from '@rawmail/db'
 import * as schema from '@rawmail/db'
 
 export function createAuth(db: Db) {
+  const baseURL = process.env.BETTER_AUTH_URL ?? 'http://localhost:3001'
+  const webURL = process.env.WEB_URL ?? 'http://localhost:3000'
+
   const auth = betterAuth({
+    baseURL,
+    trustedOrigins: [webURL, 'http://localhost:3000', 'http://localhost:3001'],
     database: drizzleAdapter(db as never, { provider: 'pg', schema: schema as never }),
     socialProviders: {
       google: {

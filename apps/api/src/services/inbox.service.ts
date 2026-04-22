@@ -1,6 +1,6 @@
 import { randomBytes } from 'crypto'
 import bcrypt from 'bcryptjs'
-import { eq, lt } from 'drizzle-orm'
+import { eq, lt, sql } from 'drizzle-orm'
 import { inboxes, type Db } from '@rawmail/db'
 
 const FREE_TTL_DAYS = 7
@@ -9,17 +9,17 @@ export class InboxService {
   constructor(private db: Db) {}
 
   async getOrCreate(address: string) {
-    const existing = await this.db.query.inboxes.findFirst({
-      where: eq(inboxes.address, address),
-    })
-    if (existing) return existing
-
     const ttlExpiresAt = new Date()
     ttlExpiresAt.setDate(ttlExpiresAt.getDate() + FREE_TTL_DAYS)
 
+    // Upsert: no race condition on concurrent first-access
     const [inbox] = await this.db
       .insert(inboxes)
       .values({ address, ttlExpiresAt })
+      .onConflictDoUpdate({
+        target: inboxes.address,
+        set: { address: sql`excluded.address` }, // no-op upsert to get RETURNING row
+      })
       .returning()
     return inbox
   }

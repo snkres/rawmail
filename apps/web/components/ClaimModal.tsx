@@ -1,7 +1,16 @@
 'use client'
 import { useState } from 'react'
+import { Copy, Check } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import type { ClaimResponse } from '@rawmail/shared'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 
 interface Props {
   address: string
@@ -11,6 +20,7 @@ export function ClaimModal({ address }: Props) {
   const [open, setOpen] = useState(false)
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   async function handleClaim() {
     setLoading(true)
@@ -25,60 +35,87 @@ export function ClaimModal({ address }: Props) {
     }
   }
 
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="text-sm text-yellow-400 border border-yellow-400/30 px-3 py-1 rounded hover:bg-yellow-400/10"
-      >
-        Claim inbox
-      </button>
-    )
+  async function copyToken() {
+    if (!token) return
+    await navigator.clipboard.writeText(token)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 max-w-md w-full mx-4">
-        {token ? (
-          <>
-            <h3 className="font-semibold text-lg mb-2">Inbox claimed</h3>
-            <p className="text-sm text-gray-400 mb-4">
-              Save this token. It will not be shown again.
-            </p>
-            <code className="block bg-gray-950 text-green-400 text-xs p-3 rounded break-all mb-4">
-              {token}
-            </code>
-            <button
-              onClick={() => setOpen(false)}
-              className="w-full bg-green-500 text-black font-semibold py-2 rounded"
-            >
-              Done
-            </button>
-          </>
-        ) : (
-          <>
-            <h3 className="font-semibold text-lg mb-2">Claim this inbox?</h3>
-            <p className="text-sm text-gray-400 mb-6">
-              Claiming locks this inbox to a secret token.
-            </p>
-            <div className="flex gap-3">
-              <button
+    <>
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+        Claim inbox
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          {token ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Inbox claimed ✓</DialogTitle>
+                <DialogDescription>
+                  Save this token — it will not be shown again. Anyone with it can read this inbox.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="relative">
+                <code className="block bg-gray-50 border border-gray-200 text-gray-800 text-xs p-4 rounded-xl break-all font-mono leading-relaxed pr-12">
+                  {token}
+                </code>
+                <button
+                  onClick={copyToken}
+                  className="absolute top-3 right-3 p-1.5 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
+                  aria-label="Copy token"
+                >
+                  {copied ? (
+                    <Check className="w-3.5 h-3.5 text-green-600" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5 text-gray-500" />
+                  )}
+                </button>
+              </div>
+              <Button
+                variant="default"
+                className="w-full"
                 onClick={() => setOpen(false)}
-                className="flex-1 border border-gray-700 py-2 rounded text-sm"
               >
-                Cancel
-              </button>
-              <button
-                onClick={handleClaim}
-                disabled={loading}
-                className="flex-1 bg-green-500 text-black font-semibold py-2 rounded text-sm disabled:opacity-50"
-              >
-                {loading ? 'Claiming...' : 'Claim'}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+                Done
+              </Button>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>Claim this inbox?</DialogTitle>
+                <DialogDescription>
+                  Claiming locks{' '}
+                  <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs text-gray-800">
+                    {address}
+                  </code>{' '}
+                  to a secret token. Only you will be able to read it — it becomes invisible to
+                  everyone else.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="default"
+                  className="flex-1"
+                  onClick={handleClaim}
+                  disabled={loading}
+                >
+                  {loading ? 'Claiming…' : 'Claim inbox'}
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

@@ -1,7 +1,10 @@
+import Link from 'next/link'
+import { Copy } from 'lucide-react'
 import { MessageList } from '@/components/MessageList'
-import { apiFetch } from '@/lib/api'
-import type { Inbox, Message } from '@rawmail/shared'
 import { ClaimModal } from '@/components/ClaimModal'
+import { apiFetch } from '@/lib/api'
+import { Badge } from '@/components/ui/badge'
+import type { Inbox, Message } from '@rawmail/shared'
 
 interface Props {
   params: Promise<{ address: string }>
@@ -10,27 +13,49 @@ interface Props {
 export default async function InboxPage({ params }: Props) {
   const resolvedParams = await params
   const address = decodeURIComponent(resolvedParams.address)
+
   const [inbox, messages] = await Promise.all([
     apiFetch<Inbox>(`/v1/inboxes/${address}`),
     apiFetch<Message[]>(`/v1/inboxes/${address}/messages`),
   ])
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white">
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
-        <a href="/" className="text-xl font-bold tracking-tight">
-          rawmail
-        </a>
-        <div className="flex items-center gap-4">
-          <code className="text-sm text-green-400 bg-gray-900 px-3 py-1 rounded">
-            {address}
-          </code>
+    <div className="min-h-screen bg-gray-50">
+      {/* Nav */}
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
+        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
+          <Link href="/" className="text-lg font-bold tracking-tight text-gray-900 shrink-0">
+            rawmail
+          </Link>
+          <div className="flex items-center gap-2 min-w-0">
+            <code className="text-sm font-mono text-gray-700 bg-gray-100 px-3 py-1 rounded-lg truncate max-w-xs">
+              {address}
+            </code>
+            {inbox.isClaimed && (
+              <Badge variant="muted">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5" />
+                Claimed
+              </Badge>
+            )}
+          </div>
           {!inbox.isClaimed && <ClaimModal address={address} />}
         </div>
-      </nav>
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      </header>
+
+      {/* Content */}
+      <main className="max-w-4xl mx-auto px-6 py-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Inbox</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {messages.length > 0
+                ? `${messages.length} message${messages.length === 1 ? '' : 's'}`
+                : 'No messages yet'}
+            </p>
+          </div>
+        </div>
         <MessageList address={address} initialMessages={messages} />
-      </div>
-    </main>
+      </main>
+    </div>
   )
 }

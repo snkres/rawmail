@@ -13,7 +13,7 @@
     "@rawmail/auth": "workspace:*",
     "@rawmail/db": "workspace:*",
     "@rawmail/shared": "workspace:*",
-    "@fastify/rate-limit": "^9.0.0",
+    "@fastify/rate-limit": "^10.0.0",
     "fastify-raw-body": "^5.0.0",
     "bcryptjs": "^2.4.3",
     "drizzle-orm": "^0.30.10",

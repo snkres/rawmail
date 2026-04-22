@@ -1,6 +1,9 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { ArrowRight } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 export function InboxInput() {
   const [value, setValue] = useState('')
@@ -15,19 +18,17 @@ export function InboxInput() {
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 max-w-lg mx-auto">
-      <input
+      <Input
         type="text"
         placeholder="anything@rawmail.sh"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-green-500"
+        className="flex-1 h-12 text-base"
       />
-      <button
-        type="submit"
-        className="bg-green-500 hover:bg-green-400 text-black font-semibold px-6 py-3 rounded-lg text-sm"
-      >
+      <Button type="submit" variant="default" size="lg" className="shrink-0 gap-1.5">
         Open
-      </button>
+        <ArrowRight className="w-4 h-4" />
+      </Button>
     </form>
   )
 }

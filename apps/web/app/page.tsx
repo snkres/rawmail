@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { ArrowRight, Shield, Zap, Globe, Lock, Code2, GitFork } from 'lucide-react'
 import { InboxInput } from '@/components/InboxInput'
+import { Navbar } from '@/components/Navbar'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 
 const features = [
   {
@@ -40,34 +40,7 @@ const features = [
 export default function Home() {
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      {/* Nav */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold tracking-tight">rawmail</span>
-            <Badge variant="yellow" className="text-[10px] font-bold uppercase tracking-wide">
-              Beta
-            </Badge>
-          </div>
-          <nav className="flex items-center gap-6">
-            <Link
-              href="/docs"
-              className="text-sm text-gray-500 hover:text-gray-900 transition-colors hidden sm:block"
-            >
-              Docs
-            </Link>
-            <Link
-              href="/pricing"
-              className="text-sm text-gray-500 hover:text-gray-900 transition-colors hidden sm:block"
-            >
-              Pricing
-            </Link>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/login">Sign in</Link>
-            </Button>
-          </nav>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero */}
       <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">

@@ -8,6 +8,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@rawmail/config": "workspace:*",
     "@fastify/swagger": "^9.5.2",
     "@fastify/swagger-ui": "^5.2.3",
     "@rawmail/auth": "workspace:*",

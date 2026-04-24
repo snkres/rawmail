@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "better-auth": "^1.3.6",
+    "@rawmail/config": "workspace:*",
     "@rawmail/db": "workspace:*"
   },
   "devDependencies": {

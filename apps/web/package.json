@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@rawmail/config": "workspace:*",
     "@rawmail/shared": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.0",
     "@radix-ui/react-slot": "^1.1.0",

@@ -14,6 +14,9 @@ import { orgRoutes } from './routes/orgs'
 import { categoryRoutes } from './routes/categories'
 import { domainRoutes } from './routes/domains'
 import { billingRoutes } from './routes/billing'
+import { configRoutes } from './routes/config.js'
+import { setupRoutes } from './routes/setup.js'
+import { getConfig } from '@rawmail/config'
 import { startTtlCron } from './services/ttl.service'
 import { InboxService } from './services/inbox.service'
 import { DomainService } from './services/domain.service'
@@ -49,7 +52,15 @@ export function buildApp(opts: FastifyServerOptions = {}) {
   app.register(orgRoutes, { prefix: '/v1/orgs' })
   app.register(categoryRoutes, { prefix: '/v1/orgs' })
   app.register(domainRoutes, { prefix: '/v1/orgs' })
-  app.register(billingRoutes, { prefix: '/v1/billing' })
+  app.register(configRoutes, { prefix: '/v1/config' })
+
+  const cfg = getConfig()
+  if (!cfg.isSaas) {
+    app.register(setupRoutes, { prefix: '/v1/setup' })
+  }
+  if (cfg.isSaas) {
+    app.register(billingRoutes, { prefix: '/v1/billing' })
+  }
 
   app.addHook('onReady', async () => {
     app.auth = createAuth(app.db)

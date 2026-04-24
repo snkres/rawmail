@@ -2,8 +2,7 @@ import { eq } from 'drizzle-orm'
 import { promises as dns } from 'dns'
 import { domains, type Db } from '@rawmail/db'
 import cron from 'node-cron'
-
-const MX_TARGET = process.env.MX_TARGET ?? 'mx.rawmail.sh'
+import { getConfig } from '@rawmail/config'
 
 export class DomainService {
   constructor(private db: Db) {}
@@ -19,7 +18,7 @@ export class DomainService {
 
     try {
       const addresses = await dns.resolveMx(domain.domain)
-      const verified = addresses.some((mx) => mx.exchange.toLowerCase() === MX_TARGET.toLowerCase())
+      const verified = addresses.some((mx) => mx.exchange.toLowerCase() === getConfig().mxTarget.toLowerCase())
       if (verified) {
         await this.db
           .update(domains)

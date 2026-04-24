@@ -1,4 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify'
+import { eq } from 'drizzle-orm'
+import { domains } from '@rawmail/db'
+import { getConfig } from '@rawmail/config'
 import { DomainService } from '../services/domain.service'
 import { OrgService } from '../services/org.service'
 
@@ -23,6 +26,20 @@ export const domainRoutes: FastifyPluginAsync<DomainRoutesOpts> = async (app, op
     }
   })
 
+  app.get<{ Params: { slug: string } }>(
+    '/:slug/domains',
+    { preHandler: [app.requireTeams] },
+    async (req, reply) => {
+      const org = await orgService.getBySlug(req.params.slug)
+      if (!org) return reply.code(404).send({ error: 'Org not found' })
+      const list = await app.db
+        .select()
+        .from(domains)
+        .where(eq(domains.orgId, org.id))
+      return list
+    },
+  )
+
   app.post<{ Params: { slug: string }; Body: { domain: string } }>(
     '/:slug/domains',
     { preHandler: [app.requireTeams] },
@@ -32,7 +49,7 @@ export const domainRoutes: FastifyPluginAsync<DomainRoutesOpts> = async (app, op
       const d = await domainService.add(org.id, req.body.domain)
       return reply.code(201).send({
         ...d,
-        instructions: `Add MX record: ${req.body.domain} MX 10 ${process.env.MX_TARGET ?? 'mx.rawmail.sh'}`,
+        instructions: `Add MX record: ${req.body.domain} MX 10 ${getConfig().mxTarget}`,
       })
     },
   )

@@ -19,12 +19,16 @@ export function getConfig() {
     polar: {
       accessToken: process.env.POLAR_ACCESS_TOKEN ?? '',
       webhookSecret: process.env.POLAR_WEBHOOK_SECRET ?? '',
-      server: (process.env.POLAR_SERVER ?? 'sandbox') as 'sandbox' | 'production',
+      server: (['sandbox', 'production'].includes(process.env.POLAR_SERVER ?? '')
+        ? process.env.POLAR_SERVER
+        : 'sandbox') as 'sandbox' | 'production',
       teamsProductId: process.env.POLAR_TEAMS_PRODUCT_ID ?? '',
     },
-    isOidcConfigured() {
-      return !!(this.oidc.clientId && this.oidc.clientSecret && this.oidc.issuerUrl)
-    },
+    isOidcConfigured: () => !!(
+      process.env.OIDC_CLIENT_ID &&
+      process.env.OIDC_CLIENT_SECRET &&
+      process.env.OIDC_ISSUER_URL
+    ),
   }
 }
 

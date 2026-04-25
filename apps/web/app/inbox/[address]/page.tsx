@@ -22,7 +22,7 @@ export default async function InboxPage({ params }: Props) {
     serverFetch<Message[]>(`/v1/inboxes/${address}/messages`, cookieHeader),
   ])
 
-  const isOrgOwned = inbox.orgId != null
+  const isOrgOwned = (inbox as any).orgId != null
 
   return (
     <div className="min-h-screen bg-gray-50">

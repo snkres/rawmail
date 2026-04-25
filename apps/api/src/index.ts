@@ -47,10 +47,9 @@ export function buildApp(opts: FastifyServerOptions = {}) {
   app.register(rateLimitPlugin)
   app.addHook('onRoute', (routeOptions) => {
     if (routeOptions.url?.startsWith('/v1/auth')) {
-      ;(routeOptions.config as any).rateLimit = { max: 10, timeWindow: '1 minute' }
-    }
-    if (routeOptions.url?.includes('/claim')) {
-      ;(routeOptions.config as any).rateLimit = { max: 5, timeWindow: '1 minute' }
+      routeOptions.config = { ...(routeOptions.config ?? {}), rateLimit: { max: 10, timeWindow: '1 minute' } }
+    } else if (routeOptions.url?.includes('/claim')) {
+      routeOptions.config = { ...(routeOptions.config ?? {}), rateLimit: { max: 5, timeWindow: '1 minute' } }
     }
   })
   app.register(planGatePlugin)

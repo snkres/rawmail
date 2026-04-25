@@ -4,6 +4,7 @@ export const InboxSchema = z.object({
   id: z.string().uuid(),
   address: z.string(),
   isClaimed: z.boolean(),
+  orgId: z.string().uuid().nullable().optional(),
   ttlExpiresAt: z.string().datetime(),
   createdAt: z.string().datetime(),
 })

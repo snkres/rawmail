@@ -1,8 +1,8 @@
 import Link from 'next/link'
-import { Copy } from 'lucide-react'
+import { cookies } from 'next/headers'
 import { MessageList } from '@/components/MessageList'
 import { ClaimModal } from '@/components/ClaimModal'
-import { apiFetch } from '@/lib/api'
+import { serverFetch } from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
 import type { Inbox, Message } from '@rawmail/shared'
 
@@ -14,10 +14,15 @@ export default async function InboxPage({ params }: Props) {
   const resolvedParams = await params
   const address = decodeURIComponent(resolvedParams.address)
 
+  const cookieStore = await cookies()
+  const cookieHeader = cookieStore.toString()
+
   const [inbox, messages] = await Promise.all([
-    apiFetch<Inbox>(`/v1/inboxes/${address}`),
-    apiFetch<Message[]>(`/v1/inboxes/${address}/messages`),
+    serverFetch<Inbox>(`/v1/inboxes/${address}`, cookieHeader),
+    serverFetch<Message[]>(`/v1/inboxes/${address}/messages`, cookieHeader),
   ])
+
+  const isOrgOwned = inbox.orgId != null
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -38,7 +43,7 @@ export default async function InboxPage({ params }: Props) {
               </Badge>
             )}
           </div>
-          {!inbox.isClaimed && <ClaimModal address={address} />}
+          {!inbox.isClaimed && !isOrgOwned && <ClaimModal address={address} />}
         </div>
       </header>
 
@@ -54,7 +59,7 @@ export default async function InboxPage({ params }: Props) {
             </p>
           </div>
         </div>
-        <MessageList address={address} initialMessages={messages} />
+        <MessageList address={address} initialMessages={messages} isOrgOwned={isOrgOwned} />
       </main>
     </div>
   )

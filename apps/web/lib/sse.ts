@@ -9,7 +9,7 @@ export function useInboxStream(address: string, _token?: string) {
 
   useEffect(() => {
     const url = new URL(`${BASE}/v1/inboxes/${encodeURIComponent(address)}/stream`)
-    const es = new EventSource(url.toString())
+    const es = new EventSource(url.toString(), { withCredentials: true })
 
     es.onmessage = (e) => {
       if (e.data === ':ping') return

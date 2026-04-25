@@ -9,9 +9,10 @@ interface Props {
   address: string
   initialMessages: Message[]
   token?: string
+  isOrgOwned?: boolean
 }
 
-export function MessageList({ address, initialMessages, token }: Props) {
+export function MessageList({ address, initialMessages, token, isOrgOwned: _isOrgOwned }: Props) {
   const streamMessages = useInboxStream(address, token)
   const [selected, setSelected] = useState<Message | null>(null)
 

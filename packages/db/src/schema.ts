@@ -15,6 +15,7 @@ export const orgs = pgTable('orgs', {
   plan: text('plan').notNull().default('free'),
   stripeCustomerId: text('stripe_customer_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
+  polarCustomerId: text('polar_customer_id'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 

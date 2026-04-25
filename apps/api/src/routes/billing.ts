@@ -1,41 +1,29 @@
 import type { FastifyPluginAsync } from 'fastify'
+import { Webhooks } from '@polar-sh/fastify'
 import { BillingService } from '../services/billing.service'
 
-interface BillingRoutesOpts {
-  billingService?: BillingService
-}
+export const billingRoutes: FastifyPluginAsync = async (app) => {
+  const billingService = new BillingService(app.db)
 
-export const billingRoutes: FastifyPluginAsync<BillingRoutesOpts> = async (app, opts) => {
-  const billingService = opts.billingService ?? new BillingService(app.db)
-
-  app.post<{ Body: { orgId: string; successUrl: string; cancelUrl: string } }>(
-    '/checkout',
-    async (req) => {
-      return billingService.createCheckoutSession(req.body.orgId, req.body.successUrl, req.body.cancelUrl)
-    },
-  )
-
-  app.post<{ Body: { orgId: string; returnUrl: string } }>('/portal', async (req) => {
-    return billingService.createPortalSession(req.body.orgId, req.body.returnUrl)
+  // POST /v1/billing/checkout
+  app.post('/checkout', async (req, reply) => {
+    const { orgId, successUrl, cancelUrl } = req.body as any
+    const result = await billingService.createCheckoutSession(orgId, successUrl, cancelUrl)
+    return reply.send(result)
   })
 
-  app.post(
-    '/webhook',
-    {
-      config: { rawBody: true },
+  // POST /v1/billing/portal
+  app.post('/portal', async (req, reply) => {
+    const { orgId, returnUrl } = req.body as any
+    const result = await billingService.createPortalSession(orgId, returnUrl)
+    return reply.send(result)
+  })
+
+  // POST /v1/billing/webhook — Polar webhook with signature verification
+  app.post('/webhook', Webhooks({
+    webhookSecret: process.env.POLAR_WEBHOOK_SECRET!,
+    onPayload: async (payload) => {
+      await billingService.handleWebhook(payload)
     },
-    async (req: any, reply) => {
-      const sig = req.headers['stripe-signature'] as string | undefined
-      if (!sig) return reply.code(400).send({ error: 'Missing signature' })
-      try {
-        const rawBody = Buffer.isBuffer(req.rawBody)
-          ? req.rawBody
-          : Buffer.from(req.rawBody ?? '', 'utf8')
-        await billingService.handleWebhook(rawBody, sig)
-        return { received: true }
-      } catch (err: any) {
-        return reply.code(400).send({ error: err.message })
-      }
-    },
-  )
+  }))
 }

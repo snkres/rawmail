@@ -1,75 +1,67 @@
-import Stripe from 'stripe'
+import { Polar } from '@polar-sh/sdk'
+import type { Db } from '@rawmail/db'
+import { orgs } from '@rawmail/db'
 import { eq } from 'drizzle-orm'
-import { orgs, type Db } from '@rawmail/db'
-
-const TEAMS_PRICE_ID = process.env.STRIPE_TEAMS_PRICE_ID ?? ''
 
 export class BillingService {
-  private stripe: Stripe
+  private polar: Polar
 
   constructor(private db: Db) {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '')
+    this.polar = new Polar({
+      accessToken: process.env.POLAR_ACCESS_TOKEN ?? '',
+      server: (['sandbox', 'production'].includes(process.env.POLAR_SERVER ?? '')
+        ? process.env.POLAR_SERVER
+        : 'sandbox') as 'sandbox' | 'production',
+    })
   }
 
-  async createCheckoutSession(orgId: string, successUrl: string, cancelUrl: string) {
+  async createCheckoutSession(orgId: string, successUrl: string, _cancelUrl: string) {
     const org = await this.db.query.orgs.findFirst({ where: eq(orgs.id, orgId) })
-    if (!org) throw new Error('Org not found')
+    if (!org) throw new Error('org not found')
 
-    const session = await this.stripe.checkout.sessions.create({
-      mode: 'subscription',
-      line_items: [{ price: TEAMS_PRICE_ID, quantity: 1 }],
-      success_url: successUrl,
-      cancel_url: cancelUrl,
+    const checkout = await this.polar.checkouts.create({
+      products: [process.env.POLAR_TEAMS_PRODUCT_ID ?? ''],
+      successUrl,
+      externalCustomerId: orgId,
       metadata: { orgId },
     })
-
-    return { url: session.url }
+    return { url: checkout.url }
   }
 
-  async createPortalSession(orgId: string, returnUrl: string) {
+  async createPortalSession(orgId: string, _returnUrl: string) {
     const org = await this.db.query.orgs.findFirst({ where: eq(orgs.id, orgId) })
-    if (!org?.stripeCustomerId) throw new Error('No billing account found')
+    if (!org?.polarCustomerId) throw new Error('no polar customer for this org')
 
-    const session = await this.stripe.billingPortal.sessions.create({
-      customer: org.stripeCustomerId,
-      return_url: returnUrl,
+    const session = await this.polar.customerSessions.create({
+      customerId: org.polarCustomerId,
     })
-    return { url: session.url }
+    return { url: session.customerPortalUrl }
   }
 
-  async handleWebhook(rawBody: Buffer, signature: string) {
-    const event = this.stripe.webhooks.constructEvent(
-      rawBody,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET ?? '',
-    )
+  async handleWebhook(payload: any) {
+    const { type, data } = payload
 
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session
-      const orgId = session.metadata?.orgId
-      if (orgId && session.customer) {
-        await this.db
-          .update(orgs)
-          .set({ stripeCustomerId: session.customer as string })
-          .where(eq(orgs.id, orgId))
+    if (type === 'subscription.created' || type === 'subscription.updated') {
+      const orgId = data.metadata?.orgId ?? data.customer?.externalId
+      if (!orgId) return
+      const plan = data.status === 'active' ? 'teams' : 'free'
+      await this.db.update(orgs)
+        .set({ plan, polarCustomerId: data.customer?.id ?? null })
+        .where(eq(orgs.id, orgId))
+    }
+
+    if (type === 'subscription.canceled' || type === 'subscription.revoked') {
+      const orgId = data.metadata?.orgId ?? data.customer?.externalId
+      if (orgId) {
+        await this.db.update(orgs).set({ plan: 'free' }).where(eq(orgs.id, orgId))
       }
     }
 
-    if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.created') {
-      const sub = event.data.object as Stripe.Subscription
-      const plan = sub.status === 'active' ? 'teams' : 'free'
-      await this.db
-        .update(orgs)
-        .set({ plan, stripeSubscriptionId: sub.id })
-        .where(eq(orgs.stripeCustomerId, sub.customer as string))
-    }
-
-    if (event.type === 'customer.subscription.deleted') {
-      const sub = event.data.object as Stripe.Subscription
-      await this.db
-        .update(orgs)
-        .set({ plan: 'free', stripeSubscriptionId: null })
-        .where(eq(orgs.stripeCustomerId, sub.customer as string))
+    if (type === 'customer.created') {
+      const { externalId, id: polarCustomerId } = data
+      if (externalId) {
+        await this.db.update(orgs).set({ polarCustomerId }).where(eq(orgs.id, externalId))
+      }
     }
   }
 }

@@ -3,6 +3,8 @@ import { ArrowRight, Shield, Zap, Globe, Lock, Code2, GitFork } from 'lucide-rea
 import { InboxInput } from '@/components/InboxInput'
 import { Navbar } from '@/components/Navbar'
 import { Button } from '@/components/ui/button'
+import { getWebConfig } from '@/lib/app-config'
+import { redirect } from 'next/navigation'
 
 const features = [
   {
@@ -38,6 +40,9 @@ const features = [
 ]
 
 export default function Home() {
+  const { isSaas } = getWebConfig()
+  if (!isSaas) redirect('/sign-in')
+
   return (
     <div className="min-h-screen bg-white text-gray-900">
       <Navbar />

@@ -3,6 +3,8 @@ import { Check, Minus, ArrowRight } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { getWebConfig } from '@/lib/app-config'
+import { notFound } from 'next/navigation'
 
 const free = [
   'Unlimited anonymous inboxes',
@@ -52,6 +54,8 @@ function Cell({ value }: { value: boolean | string }) {
 }
 
 export default function PricingPage() {
+  if (!getWebConfig().isSaas) notFound()
+
   return (
     <div className="min-h-screen bg-white text-gray-900">
       <Navbar />

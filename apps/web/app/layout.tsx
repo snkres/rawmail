@@ -1,10 +1,12 @@
-import type { Metadata } from 'next'
 import './globals.css'
+import { getWebConfig } from '@/lib/app-config'
 
-export const metadata: Metadata = {
-  title: 'rawmail — Disposable email done right',
-  description:
-    'Private, owned inboxes with a real API. No sign-up, no tracking, no ads.',
+export function generateMetadata() {
+  const { appName } = getWebConfig()
+  return {
+    title: `${appName} — Disposable email done right`,
+    description: 'Private, owned inboxes with a real API.',
+  }
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

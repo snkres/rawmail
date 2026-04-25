@@ -45,6 +45,14 @@ export function buildApp(opts: FastifyServerOptions = {}) {
   app.register(dbPlugin)
   app.register(redisPlugin)
   app.register(rateLimitPlugin)
+  app.addHook('onRoute', (routeOptions) => {
+    if (routeOptions.url?.startsWith('/v1/auth')) {
+      ;(routeOptions.config as any).rateLimit = { max: 10, timeWindow: '1 minute' }
+    }
+    if (routeOptions.url?.includes('/claim')) {
+      ;(routeOptions.config as any).rateLimit = { max: 5, timeWindow: '1 minute' }
+    }
+  })
   app.register(planGatePlugin)
   app.register(inboxRoutes, { prefix: '/v1/inboxes' })
   app.register(messageRoutes, { prefix: '/v1/messages' })

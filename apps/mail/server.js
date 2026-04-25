@@ -8,7 +8,7 @@ const { randomUUID } = require('crypto')
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 const redis = new Redis(process.env.REDIS_URL)
-const RAWMAIL_DOMAIN = process.env.RAWMAIL_DOMAIN ?? 'rawmail.sh'
+const APP_DOMAIN = process.env.APP_DOMAIN ?? process.env.RAWMAIL_DOMAIN ?? 'rawmail.sh'
 
 function stripTrackingPixels(html) {
   if (!html) return html
@@ -19,7 +19,7 @@ function stripTrackingPixels(html) {
 }
 
 async function isKnownDomain(domain) {
-  if (domain === RAWMAIL_DOMAIN) return true
+  if (domain === APP_DOMAIN) return true
   try {
     const { rows } = await pool.query(
       'SELECT id FROM domains WHERE domain = $1 AND mx_verified = true LIMIT 1',
@@ -103,7 +103,7 @@ const server = new SMTPServer({
 server.on('error', err => console.error('[mail] server error:', err.message))
 
 server.listen(25, '0.0.0.0', () => {
-  console.log(`[mail] SMTP server listening on port 25 (domain: ${RAWMAIL_DOMAIN})`)
+  console.log(`[mail] SMTP server listening on port 25 (domain: ${APP_DOMAIN})`)
 })
 
 process.on('SIGTERM', async () => {

@@ -10,6 +10,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   return res.json() as Promise<T>
 }
 
+// Client-side only — uses NEXT_PUBLIC_API_URL so the browser can reach the API with credentials
 export async function authedFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`, {
     ...init,

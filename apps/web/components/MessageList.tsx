@@ -15,10 +15,19 @@ interface Props {
 export function MessageList({ address, initialMessages, token, isOrgOwned: _isOrgOwned }: Props) {
   const streamMessages = useInboxStream(address, token)
   const [selected, setSelected] = useState<Message | null>(null)
+  const [query, setQuery] = useState('')
 
   const all = [...streamMessages, ...initialMessages].filter(
     (m, i, arr) => arr.findIndex((x) => x.id === m.id) === i,
   )
+
+  const filteredMessages = query.trim()
+    ? all.filter(
+        (m) =>
+          m.subject?.toLowerCase().includes(query.toLowerCase()) ||
+          m.fromAddress?.toLowerCase().includes(query.toLowerCase()),
+      )
+    : all
 
   if (selected) {
     return <MessageDetail message={selected} onBack={() => setSelected(null)} />
@@ -26,7 +35,14 @@ export function MessageList({ address, initialMessages, token, isOrgOwned: _isOr
 
   return (
     <div className="space-y-2">
-      {all.length === 0 && (
+      <input
+        type="text"
+        placeholder="Search by sender or subject…"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+      />
+      {filteredMessages.length === 0 && all.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
             <Inbox className="w-7 h-7 text-gray-400" />
@@ -40,7 +56,10 @@ export function MessageList({ address, initialMessages, token, isOrgOwned: _isOr
           </p>
         </div>
       )}
-      {all.map((m) => (
+      {filteredMessages.length === 0 && all.length > 0 && (
+        <p className="text-sm text-gray-400 text-center py-10">No messages match your search.</p>
+      )}
+      {filteredMessages.map((m) => (
         <button
           key={m.id}
           onClick={() => setSelected(m)}

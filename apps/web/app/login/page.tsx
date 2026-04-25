@@ -34,7 +34,7 @@ export default function LoginPage() {
   const { data: session } = useSession()
 
   useEffect(() => {
-    if (session?.user) router.push('/')
+    if (session?.user) router.push('/dashboard')
   }, [session, router])
 
   return (
@@ -69,7 +69,7 @@ export default function LoginPage() {
               onClick={() =>
                 signIn.social({
                   provider: 'google',
-                  callbackURL: '/',
+                  callbackURL: '/dashboard',
                 })
               }
             >

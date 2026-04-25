@@ -1,36 +1,53 @@
-import { apiFetch } from '@/lib/api'
-import type { Inbox } from '@rawmail/shared'
+import { cookies } from 'next/headers'
+import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
+import { TabBar } from '@/components/ui/tabs'
+import { serverFetch } from '@/lib/api'
+
+const TABS = [
+  { id: 'inboxes', label: 'Inboxes' },
+  { id: 'categories', label: 'Categories' },
+  { id: 'members', label: 'Members' },
+  { id: 'domains', label: 'Domains' },
+  { id: 'settings', label: 'Settings' },
+]
 
 interface Props {
   params: Promise<{ slug: string }>
+  searchParams: Promise<{ tab?: string }>
 }
 
-export default async function OrgDashboard({ params }: Props) {
+export default async function OrgPage({ params, searchParams }: Props) {
   const { slug } = await params
-  const inboxes = await apiFetch<Inbox[]>(`/v1/orgs/${slug}/inboxes`)
+  const { tab = 'inboxes' } = await searchParams
+  const cookieStore = await cookies()
+  const cookieHeader = cookieStore.toString()
+
+  const org = await serverFetch<any>(`/v1/orgs/${slug}`, cookieHeader).catch(() => null)
+  if (!org) notFound()
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white">
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
-        <a href="/" className="text-xl font-bold">
-          rawmail
-        </a>
-        <span className="text-sm text-gray-400">{slug}</span>
-      </nav>
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <h1 className="text-2xl font-bold mb-6">Inboxes</h1>
-        <div className="space-y-2">
-          {inboxes.map((inbox) => (
-            <a
-              key={inbox.id}
-              href={`/inbox/${encodeURIComponent(inbox.address)}`}
-              className="block bg-gray-900 border border-gray-800 rounded-lg px-4 py-3 hover:bg-gray-800 transition-colors"
-            >
-              <span className="text-green-400 text-sm font-mono">{inbox.address}</span>
-            </a>
-          ))}
+    <div className="min-h-screen bg-white">
+      {/* Org header */}
+      <header className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-bold text-gray-900">{org.name}</h1>
+          <p className="text-xs text-gray-400">{slug}</p>
         </div>
+        <a href="/" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">← Home</a>
+      </header>
+
+      {/* Tab navigation */}
+      <div className="px-6">
+        <Suspense>
+          <TabBar tabs={TABS} basePath={`/org/${slug}`} />
+        </Suspense>
       </div>
-    </main>
+
+      {/* Tab content placeholder — tab components wired in next task */}
+      <main className="px-6 py-6">
+        <p className="text-sm text-gray-400">Tab: {tab} — loading…</p>
+      </main>
+    </div>
   )
 }
